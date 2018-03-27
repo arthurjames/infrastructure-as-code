@@ -1,0 +1,14 @@
+### OSX
+*.DS_Store
+
+### Terraform
+# Compiled files
+*.tfstate
+*.tfstate.backup
+
+# Module directory
+.terraform/
+
+
+### Ansible
+*.retry
