@@ -13,8 +13,8 @@ locals {
     "jenkins"    = "t2.micro"
     "nginx"      = "t2.nano"
     "prometheus" = "t2.micro"
-    "k8s-master" = "t2.nano"
-    "k8s-node"   = "t2.nano"
+    "k8s-master" = "t2.micro"
+    "k8s-minion" = "t2.small"
   }
 
   vpc_cidrs = {
@@ -32,16 +32,19 @@ locals {
   }
 
   private_subnets = {
-    "ims" = "10.6.0.0/24"
-    "dev" = "10.7.0.0/24"
-    "prd" = "10.8.0.0/24"
+    "ims"  = "10.6.0.0/24"
+    "dev"  = "10.7.0.0/24"
+    "prod" = "10.8.0.0/24"
   }
 
   ingress_with_cidr_blocks_map = {
-    "dmz-public-ssh"  = "${var.office_cidr}"
-    "ims-public-http" = "0.0.0.0/0"
-    "ims-ssh"         = "${local.public_subnets["bastion"]}"
-    "ims-private"     = "${local.public_subnets["ims"]}"
+    "dmz-public-ssh"   = "${var.office_cidr}"
+    "ims-public-http"  = "0.0.0.0/0"
+    "ims-ssh"          = "${local.public_subnets["bastion"]}"
+    "ims-private"      = "${local.public_subnets["ims"]}"
+    "prod-ssh"         = "${local.public_subnets["bastion"]}"
+    "prod-public-http" = "0.0.0.0/0"
+    "prod-private"     = "${local.public_subnets["prod"]}"
   }
 }
 

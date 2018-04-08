@@ -38,6 +38,17 @@ data "terraform_remote_state" "ims" {
 }
 
 ########################################
+# DATA: prod
+########################################
+data "terraform_remote_state" "prod" {
+  backend = "local"
+
+  config {
+    path = "${path.module}/../prod/terraform.tfstate"
+  }
+}
+
+########################################
 # VPC-PEERING-CONNECTION
 ########################################
 resource "aws_vpc_peering_connection" "dmz-ims" {
@@ -52,8 +63,20 @@ resource "aws_vpc_peering_connection" "dmz-ims" {
   }
 }
 
+resource "aws_vpc_peering_connection" "dmz-prod" {
+  peer_owner_id = "${data.aws_caller_identity.current.account_id}"
+  peer_vpc_id   = "${data.terraform_remote_state.prod.vpc_id}"
+  vpc_id        = "${data.terraform_remote_state.dmz.vpc_id}"
+  auto_accept   = true
+
+  tags = {
+    Terraform   = "true"
+    Environment = "P"
+  }
+}
+
 ########################################
-# ROUTES
+# ROUTES IMS
 ########################################
 resource "aws_route" "dmz-ims" {
   route_table_id            = "${data.terraform_remote_state.dmz.public_route_table_id}"
@@ -71,4 +94,25 @@ resource "aws_route" "ims-dmz-private" {
   route_table_id            = "${data.terraform_remote_state.ims.private_route_table_id}"
   destination_cidr_block    = "${data.terraform_remote_state.dmz.vpc_cidr_block}"
   vpc_peering_connection_id = "${aws_vpc_peering_connection.dmz-ims.id}"
+}
+
+########################################
+# ROUTES PROD
+########################################
+resource "aws_route" "dmz-prod" {
+  route_table_id            = "${data.terraform_remote_state.dmz.public_route_table_id}"
+  destination_cidr_block    = "${data.terraform_remote_state.prod.vpc_cidr_block}"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.dmz-prod.id}"
+}
+
+resource "aws_route" "prod-dmz-public" {
+  route_table_id            = "${data.terraform_remote_state.prod.public_route_table_id}"
+  destination_cidr_block    = "${data.terraform_remote_state.dmz.vpc_cidr_block}"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.dmz-prod.id}"
+}
+
+resource "aws_route" "prod-dmz-private" {
+  route_table_id            = "${data.terraform_remote_state.prod.private_route_table_id}"
+  destination_cidr_block    = "${data.terraform_remote_state.dmz.vpc_cidr_block}"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.dmz-prod.id}"
 }

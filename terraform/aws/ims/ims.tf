@@ -17,12 +17,16 @@ provider "aws" {
   version = "~> 1.14"
 }
 
+locals {
+  env_name = "ims"
+}
+
 ########################################
 # VPC: ims
 ########################################
 module "vpc_ims" {
   source = "terraform-aws-modules/vpc/aws"
-  name   = "IMS"
+  name   = "${upper(local.env_name)}"
 
   azs                  = "${data.terraform_remote_state.global.availability_zones}"
   cidr                 = "${data.terraform_remote_state.global.vpc_cidrs["ims"]}"
@@ -44,7 +48,7 @@ module "vpc_ims" {
 ########################################
 module "node_nginx" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "grafana"
+  name   = "${local.env_name}-grafana"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true
@@ -70,7 +74,7 @@ module "node_nginx" {
 ########################################
 module "node_jenkins" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "jenkins"
+  name   = "${local.env_name}-jenkins"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true
@@ -96,7 +100,7 @@ module "node_jenkins" {
 ########################################
 module "node_elastic" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "elastic"
+  name   = "${local.env_name}-elastic"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true

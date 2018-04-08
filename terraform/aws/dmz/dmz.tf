@@ -6,6 +6,7 @@ terraform {
 
 locals {
   number_of_eips = "1"
+  env_name       = "dmz"
 }
 
 data "terraform_remote_state" "global" {
@@ -30,7 +31,7 @@ resource "aws_eip" "nat_bastion" {
 ########################################
 module "vpc_dmz" {
   source = "terraform-aws-modules/vpc/aws"
-  name   = "DMZ"
+  name   = "${upper(local.env_name)}"
 
   azs                  = "${data.terraform_remote_state.global.availability_zones}"
   cidr                 = "${data.terraform_remote_state.global.vpc_cidrs["bastion"]}"
@@ -53,7 +54,7 @@ module "vpc_dmz" {
 ########################################
 module "node_bastion" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "bastion"
+  name   = "${local.env_name}-bastion"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true
