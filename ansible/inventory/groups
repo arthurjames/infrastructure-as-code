@@ -6,6 +6,8 @@
 
 [tag_ansibleNodeType_nginx]
 
+[tag_ansibleNodeType_prometheus]
+
 [loghost:children]
 tag_ansibleNodeType_bastion
 
@@ -17,3 +19,6 @@ tag_ansibleNodeType_jenkins
 
 [nginx:children]
 tag_ansibleNodeType_grafana
+
+[metrics:children]
+tag_ansibleNodeType_prometheus

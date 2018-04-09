@@ -1,0 +1,5 @@
+---
+prometheus_components: 
+  - prometheus
+  - alertmanager
+prometheus_alertmanager_url: "http://localhost:9093/"
