@@ -12,10 +12,11 @@
       apt: update_cache=yes cache_valid_time=86400
       
   roles:
-    - role: ansible-role-ntp
     - { role: ansible-elasticsearch, es_instance_name: "es01",
     es_config: {
     	network.bind_host: 0,
+        node.master: true,
+        node.data: true,
         http.cors.enabled: true,
         http.cors.allow-origin: "*"
         }

@@ -3,8 +3,13 @@
 java_packages:
   - openjdk-8-jdk
 
-jenkins_version: 2.103
+jenkins_admin_username: admin
+jenkins_admin_password: admin
+jenkins_java_options: "-Djenkins.install.runSetupWizard=false"
 
+jenkins_version: 2.115
+# Change this to `latest` to update Jenkins if a newer version is available.
+jenkins_package_state: present
 jenkins_plugins:
   - bitbucket
   - branch-api
@@ -12,5 +17,9 @@ jenkins_plugins:
   - git
   - golang
   - mercurial
+  - prometheus
   - slack
   - workflow-multibranch
+jenkins_plugins_state: present
+jenkins_plugin_updates_expiration: 86400
+jenkins_plugin_timeout: 30  
