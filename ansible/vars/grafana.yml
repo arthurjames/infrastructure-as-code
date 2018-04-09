@@ -1,0 +1,4 @@
+---
+
+# Setup nginx configuration
+grafana_nginx: false

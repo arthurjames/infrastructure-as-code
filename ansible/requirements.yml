@@ -1,0 +1,26 @@
+---
+
+# elastic_role
+- src: https://github.com/elastic/ansible-elasticsearch.git
+  scm: git
+  version: "5.5.1"
+
+# grafana_role
+- src: https://github.com/Stouts/Stouts.grafana.git
+  scm: git
+  version: "3.1.1"
+
+# jenkins_role
+- src: https://github.com/arthurjames/ansible-role-jenkins.git
+  scm: git
+  version: "3.3.1"
+
+# nginx role
+- src: https://github.com/jdauphant/ansible-role-nginx.git
+  scm: git
+  version: "v2.13"
+
+# ntp_role
+- src: https://github.com/geerlingguy/ansible-role-ntp.git
+  scm: git
+  version: "1.5.2"

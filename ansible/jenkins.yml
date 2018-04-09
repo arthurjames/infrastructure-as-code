@@ -1,0 +1,15 @@
+---
+
+- name: Configure application server with jenkins
+  hosts: ci
+  become: yes
+  become_user: root
+  vars_files:
+    - vars/jenkins.yml
+  
+  pre_tasks:
+    - name: Update apt cache if needed
+      apt: update_cache=yes cache_valid_time=86400
+      
+  roles:
+    - role: geerlingguy.jenkins

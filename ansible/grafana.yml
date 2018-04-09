@@ -1,0 +1,18 @@
+---
+
+- name: Configure webhost with grafana and nginx proxy for jenkins
+  hosts: grafana
+  become: yes
+  become_user: root
+  vars_files:
+    - vars/grafana.yml
+    - vars/nginx.yml
+    
+  pre_tasks:
+    - name: Update apt cache if needed
+      apt: update_cache=yes cache_valid_time=86400
+
+  roles:
+    - role: ansible-role-ntp
+    - role: Stouts.grafana
+    - role: ansible-role-nginx

@@ -1,0 +1,13 @@
+---
+
+- name: Update and upgrade apt packages
+  become: yes
+  apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400 # one day    
+    
+- name: Install apt packages
+  apt: pkg={{ item }} update_cache=yes cache_valid_time=3600
+  become: yes
+  with_items:
