@@ -5,6 +5,17 @@ nginx_sites:
     - server_name web01.dev
     - root "/usr/share/nginx/html"
     - index index.html
+  elastic:
+    - listen 80
+    - server_name elastic.arthurjames.nl
+    - |
+      location / {
+        proxy_pass http://10.6.0.192:9200;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded_For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded_Proto $scheme;
+      }
   grafana:
     - listen 80
     - server_name grafana.arthurjames.nl

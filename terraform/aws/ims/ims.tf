@@ -126,7 +126,7 @@ module "node_elastic" {
 ########################################
 module "node_prometheus" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "prometheus"
+  name   = "${local.env_name}-prometheus"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true
