@@ -40,11 +40,11 @@ module "vpc_ims" {
 }
 
 ########################################
-# EC2-INSTANCE: nginx proxy
+# EC2-INSTANCE: nginx proxy with grafana
 ########################################
 module "node_nginx" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "nginx"
+  name   = "grafana"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true
@@ -61,7 +61,7 @@ module "node_nginx" {
   tags = {
     Terraform       = "true"
     Environment     = "P"
-    ansibleNodeType = "nginx"
+    ansibleNodeType = "grafana"
   }
 }
 
@@ -120,6 +120,28 @@ module "node_elastic" {
 ########################################
 # EC2-INSTANCE: prometheus
 ########################################
+module "node_prometheus" {
+  source = "terraform-aws-modules/ec2-instance/aws"
+  name   = "prometheus"
+
+  ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
+  associate_public_ip_address = true
+  instance_type               = "${lookup(data.terraform_remote_state.global.instance_types, "prometheus")}"
+  key_name                    = "${data.terraform_remote_state.global.key_name}"
+  monitoring                  = false
+  subnet_id                   = "${element(module.vpc_ims.private_subnets,0)}"
+
+  vpc_security_group_ids = [
+    "${module.sg_ims_ssh.this_security_group_id}",
+    "${module.sg_ims_private_prometheus.this_security_group_id}",
+  ]
+
+  tags = {
+    Terraform       = "true"
+    Environment     = "P"
+    ansibleNodeType = "prometheus"
+  }
+}
 
 ########################################
 # SECURITY-GROUP: sg_ims_ssh
@@ -221,6 +243,36 @@ module "sg_ims_private_elastic" {
     "elasticsearch-rest-tcp",
     "elasticsearch-java-tcp",
   ]
+
+  egress_with_cidr_blocks = [{
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = "0.0.0.0/0"
+  }]
+
+  tags = {
+    Terraform   = "true"
+    Environment = "P"
+  }
+}
+
+########################################
+# SECURITY-GROUP: sg_ims_private_prometheus
+########################################
+module "sg_ims_private_prometheus" {
+  source = "terraform-aws-modules/security-group/aws"
+  name   = "sg_ims_private_prometheus"
+
+  description = "Security group for prometheus host on ims private subnet"
+  vpc_id      = "${module.vpc_ims.vpc_id}"
+
+  ingress_with_cidr_blocks = [{
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = "${lookup(data.terraform_remote_state.global.ingress_with_cidr_blocks_map, "ims-private")}"
+  }]
 
   egress_with_cidr_blocks = [{
     from_port   = 0

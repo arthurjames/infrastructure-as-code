@@ -1,0 +1,16 @@
+---
+
+- name: Configure monitoring server with prometheus
+  hosts: metrics
+  become: yes
+  become_user: root
+  vars_files:
+    - vars/prometheus.yml
+
+  pre_tasks:
+    - name: Update apt cache if needed
+      apt: update_cache=yes cache_valid_time=86400
+      
+  roles:
+    - role: ansible-role-ntp
+    - role: ansible-prometheus
