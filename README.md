@@ -17,7 +17,7 @@ First, follow these steps to set up the core environment (vpc, subnets, acl's an
 Generate the vars that serve for setting up the core environment.
 
 ```
-$ cd terraform/envs/ims/ims_vars
+$ cd terraform/aws/vars
 $ terraform apply
 ```
 
@@ -25,44 +25,63 @@ You'll need to fill in two values:
 * var.key_name - which is the AWS key pair name you'll be using
 * var.office_cidr - which is the network from where you'll grant SSH access to the public subnet. For example: 1.1.1.1/32.
 
-#### Core environment
+#### VPC's
+
+There are 4 separate vpc's:
+* dmz: contains bastion
+* ims: Infrastructure Management System
+* dev
+* prod
+
+Each VPC can be kicked off with:
 
 ```
-$ cd terraform/envs/ims/core
+$ cd terraform/aws/<vpc>
 $ terraform init
 $ terraform plan
 $ terraform apply
 ```
 
+#### DMZ
+
+DMZ contains your loghost/bastion.
+
 #### Infrastructure Management System (IMS)
 
-This step will create the necessary EC2 instances, three on the IMS subnet:
-* jenkins
-* elasticsearch
-* prometheus
+This step will create the necessary EC2 instances.
+* public subnet:
+  * nginx proxy with grafana
 
-And finally, the proxy for the webinterfaces of elasticsearch and prometheus:
-* nginx proxy
+* private subnet:
+  * jenkins
+  * elasticsearch
+  * prometheus
 
-#### Kubernetes
+#### DEV/PROD
 
-This step will create a kubernetes setup which consists of:
-* master
-* slaves
-* etcd
+These environments are functionally exactly the same.
+* public subnet:
+  * nginx proxy
+  
+* private subnet:  
+  * k8s master
+  * k8s slaves
+  * etcd
 
-#### Connect to bastion
+#### Peering connections
 
-OSX:
+As a final step, create peering connections between your VPC's and add necessary routing rules.
+
 ```
-$ ssh-add -k ~/.ssh/yourprivatekey.pem
-$ ssh-add -L
+$ cd terraform/aws/network
+$ terraform init
+$ terraform plan
+$ terraform apply
 ```
 
 ### Ansible
 
-For configuration of the nodes we'll move to AWS. We want to configure all nodes be it on public or private subnets. Because most
-nodes do not have a public dns name, nor public ip, we need to select those nodes by private ip's.
+For configuation management we use Ansible using a dynamic inventory script behind a bastion.
 
 #### Preparation
 
@@ -72,14 +91,44 @@ $ cd ansible
 $ ansible-galaxy install -r requirements.yml
 ```
 
-#### Bootstrap
+Make sure your ssh keypair has been added to your ssh-agent:
+```
+$ ssh-add ~/.ssh/yourprivatekey.pem
+$ ssh-add -L
+```
 
-We need a node where we can bootstrap the ansible playbooks from. For convenience, we'll pick the bastion host.
+In directory `inventory/ec2.ini` check if the following settings are correct:
+```
+destination_variable = private_dns_name
+vpc_destination_variable = private_ip_address
+```
+
+Change your ~/.ssh/config (or create one if it doesn't exist):
+```
+Host 10.*.*.*
+  User admin
+  IdentityFile ~/.ssh/yourprivatekey.pem
+  ProxyCommand ssh -q -W %h:%p bastion
+Host bastion
+  Hostname <public-dns-bastion>
+  IdentityFile ~/ssh/yourprivatekey.pem
+  ForwardAgent yes
+```  
+
+#### Configuration
+
+```
+$ ansible-playbook bootstrap.yml
+$ ansible-playbook elastic.yml
+$ ansible-playbook grafana.yml
+$ ansible-playbook jenkins.yml
+$ ansible-playbook prometheus.yml
+```
 
 #### Problems
 
 ```
-ubuntu@bastion_1:~/infrastructure-as-code/ansible$ ansible-playbook bootstrap.yml
+admin@bastion_1:~/infrastructure-as-code/ansible$ ansible-playbook bootstrap.yml
 ERROR! no action detected in task
 
 The error appears to have been in '/etc/ansible/roles/ansible-role-ntp/tasks/main.yml': line 19, column 3, but may
@@ -95,9 +144,9 @@ The offending line appears to be:
 The problem here is you're having an old ansible version installed. Should be >= 2.2.
 ```
 root@ip-10-0-1-124:~# apt-add-repository ppa:ansible/ansible
-ubuntu@bastion_1:~# sudo apt-get update
-ubuntu@bastion_1:~# sudo apt-get install ansible
-ubuntu@bastion_1:~# ansible --version
+admin@bastion_1:~# sudo apt-get update
+admin@bastion_1:~# sudo apt-get install ansible
+admin@bastion_1:~# ansible --version
 ansible 2.5.0
   config file = /etc/ansible/ansible.cfg
   configured module search path = [u'/root/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
