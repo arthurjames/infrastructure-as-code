@@ -1,0 +1,18 @@
+---
+
+GOPATH: /home/jenkins/go
+GOROOT: /usr/local/go
+
+go_version: 1.9.2
+go_get:
+  - name: dep
+    url: github.com/golang/dep/cmd/dep
+    link: true
+  - name: mockgen
+    url: github.com/golang/mock/mockgen
+    link: true
+  - name: proto
+    url: github.com/micro/protobuf/proto
+  - name: protoc-gen-go
+    url: github.com/micro/protobuf/protoc-gen-go
+    link: true

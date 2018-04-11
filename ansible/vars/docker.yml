@@ -1,0 +1,18 @@
+---
+
+docker_install_compose: true
+docker_config_dir: "{{ jenkins_home }}/.docker"
+docker_config_owner: "{{ jenkins_user }}"
+docker_config_group: "{{ jenkins_group }}"
+
+docker_config: |-
+  {
+    "auths": {
+      "quay.io": {
+        "auth": "{{ lookup('env','QUAY_TOKEN') }}"
+      }
+    }
+  }
+
+docker_group_users:
+  - "{{ jenkins_user }}"

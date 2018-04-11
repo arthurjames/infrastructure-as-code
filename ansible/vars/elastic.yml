@@ -1,0 +1,7 @@
+---
+
+# Setup elastic configuration
+es_version_lock: false
+es_heap_size: 1g
+es_start_service: true
+es_plugins_reinstall: false
