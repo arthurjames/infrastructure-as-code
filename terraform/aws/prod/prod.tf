@@ -21,6 +21,11 @@ locals {
   env_name = "prod"
 }
 
+resource "aws_eip" "nat_prod" {
+  count = "${data.terraform_remote_state.global.elastic_ips["prod"]}"
+  vpc   = true
+}
+
 ########################################
 # VPC: prod
 ########################################
@@ -34,6 +39,7 @@ module "vpc_prod" {
   enable_dns_support   = true
   enable_nat_gateway   = true
   enable_vpn_gateway   = false
+  external_nat_ip_ids  = ["${aws_eip.nat_prod.*.id}"]
   private_subnets      = ["${data.terraform_remote_state.global.private_subnets["prod"]}"]
   public_subnets       = ["${data.terraform_remote_state.global.public_subnets["prod"]}"]
 
@@ -70,28 +76,28 @@ module "node_nginx" {
 }
 
 ########################################
-# EC2-INSTANCE: k8s-master
+# EC2-INSTANCE: nginx proxy
 ########################################
-module "node_k8s_master" {
+module "node_nginx" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "${local.env_name}-k8s-master"
+  name   = "${local.env_name}-nginx"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true
-  instance_type               = "${lookup(data.terraform_remote_state.global.instance_types, "k8s-master")}"
+  instance_type               = "${lookup(data.terraform_remote_state.global.instance_types, "nginx")}"
   key_name                    = "${data.terraform_remote_state.global.key_name}"
   monitoring                  = false
-  subnet_id                   = "${element(module.vpc_prod.private_subnets,0)}"
+  subnet_id                   = "${element(module.vpc_prod.public_subnets,0)}"
 
   vpc_security_group_ids = [
     "${module.sg_prod_ssh.this_security_group_id}",
-    "${module.sg_prod_private_k8s.this_security_group_id}",
+    "${module.sg_prod_public_nginx.this_security_group_id}",
   ]
 
   tags = {
     Terraform       = "true"
     Environment     = "P"
-    ansibleNodeType = "k8s-master"
+    ansibleNodeType = "nginx"
   }
 }
 

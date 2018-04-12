@@ -5,8 +5,7 @@ terraform {
 }
 
 locals {
-  number_of_eips = "1"
-  env_name       = "dmz"
+  env_name = "dmz"
 }
 
 data "terraform_remote_state" "global" {
@@ -22,7 +21,7 @@ provider "aws" {
 }
 
 resource "aws_eip" "nat_bastion" {
-  count = "${local.number_of_eips}"
+  count = "${data.terraform_remote_state.global.elastic_ips["dmz"]}"
   vpc   = true
 }
 

@@ -7,6 +7,11 @@ variable "office_cidr" {
 }
 
 locals {
+  elastic_ips = {
+    "dmz"  = 1
+    "prod" = 1
+  }
+
   instance_types = {
     "bastion"    = "t2.nano"
     "elastic"    = "t2.small"
@@ -56,6 +61,10 @@ output "amis" {
 
 output "availability_zones" {
   value = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+}
+
+output "elastic_ips" {
+  value = "${local.elastic_ips}"
 }
 
 output "ingress_with_cidr_blocks_map" {
