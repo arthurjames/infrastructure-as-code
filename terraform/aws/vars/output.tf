@@ -15,6 +15,7 @@ locals {
   instance_types = {
     "bastion"    = "t2.nano"
     "elastic"    = "t2.small"
+    "etcd"       = "t2.nano"
     "jenkins"    = "t2.micro"
     "nginx"      = "t2.nano"
     "prometheus" = "t2.micro"

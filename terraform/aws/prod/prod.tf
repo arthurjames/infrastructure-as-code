@@ -76,28 +76,54 @@ module "node_nginx" {
 }
 
 ########################################
-# EC2-INSTANCE: nginx proxy
+# EC2-INSTANCE: etcd
 ########################################
-module "node_nginx" {
+module "node_etcd" {
   source = "terraform-aws-modules/ec2-instance/aws"
-  name   = "${local.env_name}-nginx"
+  name   = "${local.env_name}-etcd"
 
   ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
   associate_public_ip_address = true
-  instance_type               = "${lookup(data.terraform_remote_state.global.instance_types, "nginx")}"
+  instance_type               = "${lookup(data.terraform_remote_state.global.instance_types, "etcd")}"
   key_name                    = "${data.terraform_remote_state.global.key_name}"
   monitoring                  = false
-  subnet_id                   = "${element(module.vpc_prod.public_subnets,0)}"
+  subnet_id                   = "${element(module.vpc_prod.private_subnets,0)}"
 
   vpc_security_group_ids = [
     "${module.sg_prod_ssh.this_security_group_id}",
-    "${module.sg_prod_public_nginx.this_security_group_id}",
+    "${module.sg_prod_private_etcd.this_security_group_id}",
   ]
 
   tags = {
     Terraform       = "true"
     Environment     = "P"
-    ansibleNodeType = "nginx"
+    ansibleNodeType = "etcd"
+  }
+}
+
+########################################
+# EC2-INSTANCE: k8s-master
+########################################
+module "node_k8s_master" {
+  source = "terraform-aws-modules/ec2-instance/aws"
+  name   = "${local.env_name}-k8s-master"
+
+  ami                         = "${lookup(data.terraform_remote_state.global.amis, data.terraform_remote_state.global.region)}"
+  associate_public_ip_address = true
+  instance_type               = "${lookup(data.terraform_remote_state.global.instance_types, "k8s-master")}"
+  key_name                    = "${data.terraform_remote_state.global.key_name}"
+  monitoring                  = false
+  subnet_id                   = "${element(module.vpc_prod.private_subnets,0)}"
+
+  vpc_security_group_ids = [
+    "${module.sg_prod_ssh.this_security_group_id}",
+    "${module.sg_prod_private_k8s.this_security_group_id}",
+  ]
+
+  tags = {
+    Terraform       = "true"
+    Environment     = "P"
+    ansibleNodeType = "k8s-master"
   }
 }
 
@@ -166,6 +192,39 @@ module "sg_prod_ssh" {
   ingress_cidr_blocks = ["${lookup(data.terraform_remote_state.global.ingress_with_cidr_blocks_map, "prod-ssh")}"]
 
   ingress_rules = ["ssh-tcp"]
+
+  egress_with_cidr_blocks = [{
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = "0.0.0.0/0"
+  }]
+
+  tags = {
+    Terraform   = "true"
+    Environment = "P"
+  }
+}
+
+########################################
+# SECURITY-GROUP: sg_prod_private_etcd
+########################################
+module "sg_prod_private_etcd" {
+  source = "terraform-aws-modules/security-group/aws"
+  name   = "sg_prod_private_etcd"
+
+  description = "Security group for etcd host on prod private subnet"
+  vpc_id      = "${module.vpc_prod.vpc_id}"
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 2379
+      to_port     = 2380
+      protocol    = "tcp"
+      description = "etcd client and peer ports"
+      cidr_blocks = "${lookup(data.terraform_remote_state.global.ingress_with_cidr_blocks_map, "prod-private")}"
+    },
+  ]
 
   egress_with_cidr_blocks = [{
     from_port   = 0
