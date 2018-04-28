@@ -1,0 +1,39 @@
+---
+
+# Basic settings
+postgresql_version: 10.3
+postgresql_encoding: "UTF-8"
+postgresql_locale: "en_US.UTF-8"
+postgresql_ctype: "en_US.UTF-8"
+
+postgresql_admin_user: "postgres"
+postgresql_default_auth_method: "trust"
+
+postgresql_service_enabled: true
+
+postgresql_cluster_name: "main"
+postgresql_cluster_reset: false
+
+# List of databases to be created (optional)
+# Note: for more flexibility with extensions use the postgresql_database_extensions setting.
+postgresql_databases:
+  - name: postgres
+    owner: postgres           # optional; specify the owner of the database
+    hstore: yes               # flag to install the hstore extension on this database (yes/no)
+    uuid_ossp: yes            # flag to install the uuid-ossp extension on this database (yes/no)
+    citext: yes               # flag to install the citext extension on this database (yes/no)
+    encoding: "UTF-8"         # override global {{ postgresql_encoding }} variable per database
+    lc_collate: "en_GB.UTF-8" # override global {{ postgresql_locale }} variable per database
+    lc_ctype: "en_GB.UTF-8"   # override global {{ postgresql_ctype }} variable per database
+
+# List of users to be created (optional)
+postgresql_users:
+  - name: postgres
+    pass: changeme 
+    encrypted: no       # denotes if the password is already encrypted.
+
+# List of schemas to be created (optional)
+postgresql_schemas:
+  - database: postgres           # database name
+    schema: postgres             # schema name
+    state: present

@@ -44,6 +44,11 @@
   scm: git
   version: "1.5.2"
 
+# postgresql role
+- src: https://github.com/ANXS/postgresql.git
+  scm: git
+  version: "v1.10.1"
+
 # prometheus_role
 - src: http://github.com/idealista/prometheus_server-role.git
   scm: git
